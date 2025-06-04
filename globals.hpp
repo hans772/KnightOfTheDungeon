@@ -2,8 +2,7 @@
 #include <vector>
 
 enum class TileType : char {
-	WALL_VERT = '#',
-	WALL_HOR = '=',
+	WALL = '#',
 	FLOOR = ' ',
 	TRAP_SPIKE = '*',
 	TRAP_ARROW = '$'

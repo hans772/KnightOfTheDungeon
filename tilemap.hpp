@@ -26,7 +26,7 @@ public:
 	static sf::Texture tile_atlas;
 	static int tile_width, tile_height;
 
-	Tile(TileType type, TileState state, sf::Vector2f position);
+	Tile(TileType type, TileState state, sf::Vector2f position, int index);
 
 	std::string state;
 
@@ -39,7 +39,10 @@ class TileMap : public sf::Drawable {
 public:
 	int tilewidth, tileheight;
 
-	TileMap(int tilewidth, int tileheight, std::vector<std::vector<TileType>> &map);
+	TileMap(int tilewidth, int tile_height);
+	
+	void generate_tilemap(std::vector<std::vector<TileType>>& map);
+
 	std::vector<std::vector<Tile>> tiles;
 
 	static void load_tile_textures();

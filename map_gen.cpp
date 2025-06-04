@@ -109,11 +109,8 @@ void MapGenerator::generate_map(){
 			// vertical walls are given priority
 			
 			// iterate through tiles priority wise
-			if (!(i % (ROOM_WIDTH-1))) {
-				map[j].push_back(TileType::WALL_VERT);
-			}
-			else if (!(j % (ROOM_HEIGHT-1))) {
-				map[j].push_back(TileType::WALL_HOR);
+			if (!(i % (ROOM_WIDTH-1)) || !(j % (ROOM_HEIGHT - 1))) {
+				map[j].push_back(TileType::WALL);
 			}
 			else {
 				map[j].push_back(

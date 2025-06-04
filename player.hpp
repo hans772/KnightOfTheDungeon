@@ -11,7 +11,15 @@ public:
 	sf::Sprite sprite;
 	sf::Vector2f position;
 	sf::Angle facing;
+	float move_speed;
+	float drag;
 
-	Player(std::string path, int fw, int fh, sf::Vector2f pos);
+	sf::Vector2f velocity;
+
+	Player(std::string path, int fw, int fh);
 	void update(sf::Time dt);
+
+	void set_position(sf::Vector2f pos);
+	void move(sf::Keyboard::Scan key);
+	void rotate(sf::Keyboard::Scan key);
 };
