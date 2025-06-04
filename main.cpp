@@ -17,7 +17,7 @@ int main()
     sf::Clock clock;
     sf::Time dt;
 
-    GameStateManager::get().push_state(std::make_unique<MainGame>(3, 3));
+    GameStateManager::get().push_state(std::make_unique<MainGame>(5, 5));
 
     while (window.isOpen())
     {

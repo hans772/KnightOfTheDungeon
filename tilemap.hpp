@@ -26,13 +26,19 @@ public:
 	static sf::Texture tile_atlas;
 	static int tile_width, tile_height;
 
-	Tile(TileType type, TileState state, sf::Vector2f position, int index);
+	TileType type;
+	TileState state;
 
-	std::string state;
+	Tile(TileType type, TileState state, sf::Vector2f position, int index);
 
 	bool collidable;
 
+	sf::FloatRect get_bounds();
+	
+	void set_color(sf::Color);
+
 	static void add_state(TileType type, TileState state, int row, int column, int number);
+
 };
 
 class TileMap : public sf::Drawable {
@@ -46,7 +52,9 @@ public:
 	std::vector<std::vector<Tile>> tiles;
 
 	static void load_tile_textures();
+	std::vector<Tile> *check_collision( const sf::FloatRect &player_bounds);
 
 private:
 	virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
 };

@@ -373,3 +373,5 @@ FodyWeavers.xsd"sfml-*-3.dll"
 /sfml-window-d-3.dll
 /DungeonCrawler.vcxproj
 /DungeonCrawler.vcxproj.filters
+/resources/assets/moderntiles.xcf
+/resources/assets/moderntiles1.xcf

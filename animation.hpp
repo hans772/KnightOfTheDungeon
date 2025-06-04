@@ -15,7 +15,7 @@ class Animation {
 	std::unordered_map < std::string, std::unordered_map<std::string, int> > anim_states;
 
 public:
-	Animation(int fw, int fh, int anim_speed);
+	Animation(int fw, int fh);
 
 	void set_state(std::string state);
 	void next_frame(sf::Time dt);

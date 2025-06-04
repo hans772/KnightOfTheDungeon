@@ -25,13 +25,8 @@ MainGame::MainGame(int map_w, int map_h) :
 {
 	mapgen.generate_map();
 	tilemap.generate_tilemap(mapgen.map);
-	player.set_position(
-		(sf::Vector2f((mapgen.ROOM_WIDTH-2) * tilemap.tilewidth, (mapgen.ROOM_HEIGHT-2) * tilemap.tileheight) - player.sprite.getScale())/2.f);
-	player.animation.add_state("idle", 0, 4, 4);
-	player.animation.add_state("walk_right", 1, 8, 8);
-	player.animation.add_state("walk_left", 3, 8, 8);
-	player.animation.add_state("walk_top", 2, 8, 8);
-	player.animation.add_state("walk_down", 4, 8, 8);
+	player.set_center(
+		(sf::Vector2f((mapgen.ROOM_WIDTH) * tilemap.tilewidth, (mapgen.ROOM_HEIGHT) * tilemap.tileheight))/2.f);
 
 	key_event_handler.register_event(sf::Keyboard::Scan::Up, std::bind(&Player::move, &player, std::placeholders::_1), true);
 	key_event_handler.register_event(sf::Keyboard::Scan::Down, std::bind(&Player::move, &player, std::placeholders::_1), true);
@@ -43,7 +38,44 @@ MainGame::MainGame(int map_w, int map_h) :
 }
 
 void MainGame::update(sf::Time dt) {
+	sf::FloatRect expected_box = player.collision_box;
+
+	std::vector<Tile>* collisions;
+
+	expected_box.position.x += player.velocity.x * player.move_speed * dt.asSeconds();
+
+	collisions = tilemap.check_collision(expected_box);
+	for (Tile tile : *collisions) {
+		switch (tile.type)
+		{
+		case TileType::WALL:
+			player.velocity.x = 0;
+			break;
+		}
+	}
+
+	collisions->clear();
+	delete collisions;
+	
+	expected_box.position.x = player.collision_box.position.x;
+	expected_box.position.y += player.velocity.y * player.move_speed * dt.asSeconds();
+	
+	collisions = tilemap.check_collision(expected_box);
+	for (Tile tile : *collisions) {
+		switch (tile.type)
+		{
+		case TileType::WALL:
+		case TileType::TRAP_ARROW:
+			player.velocity.y = 0;
+			break;
+		}
+	}
+
+	collisions->clear();
+	delete collisions;
+
 	player.update(dt);
+
 	game_view.setCenter(player.position);
 }
 

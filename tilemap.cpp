@@ -6,11 +6,10 @@ std::unordered_map<TileType, std::unordered_map<TileState, std::vector<sf::IntRe
 sf::Texture Tile::tile_atlas;
 int Tile::tile_width, Tile::tile_height;
 
-Tile::Tile(TileType type, TileState state , sf::Vector2f position, int index = -1) : sprite(tile_atlas) {
+Tile::Tile(TileType type, TileState state , sf::Vector2f position, int index = -1) : sprite(tile_atlas), type(type), state(state) {
 	std::vector<sf::IntRect> rectvect = tilemap[type][state];
-	setPosition(position);
+	move(position);
 	collidable = false;
-
 	if (index >= 0) sprite.setTextureRect(rectvect[index]);
 	else {
 		if (rectvect.size() > 1) {
@@ -27,6 +26,14 @@ Tile::Tile(TileType type, TileState state , sf::Vector2f position, int index = -
 		}
 
 	}	
+}
+
+sf::FloatRect Tile::get_bounds() {
+	return sprite.getGlobalBounds();
+}
+
+void Tile::set_color(sf::Color color) {
+	sprite.setColor(color);
 }
 
 void Tile::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -71,10 +78,15 @@ void TileMap::generate_tilemap(std::vector<std::vector<TileType>>& map){
 				if (j < map.size() - 1 && map[j + 1][i] == TileType::WALL) bitmask |= 4;  
 				if (i > 0 && map[j][i - 1] == TileType::WALL) bitmask |= 8; 
 
-				std::cout << bitmask;
 			}
 			}
 			Tile newtile = Tile(type, state, sf::Vector2f(i * tilewidth, j * tileheight), bitmask);
+			switch (type) {
+			case TileType::WALL:
+			case TileType::TRAP_SPIKE:
+			case TileType::TRAP_ARROW:
+				newtile.collidable = true;
+			}
 			tiles.back().push_back(newtile);
 		}
 	}
@@ -86,4 +98,23 @@ void TileMap::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 			target.draw(tile, states);
 		}
 	}
+}
+
+std::vector<Tile> *TileMap::check_collision(const sf::FloatRect &player_bounds) {
+	sf::Vector2f player_pos = player_bounds.getCenter();
+	sf::Vector2i prob_t_index = { (int)player_pos.x / tilewidth, (int)player_pos.y / tileheight };
+
+	int error = 2;
+
+	std::vector<Tile> *col_tiles = new std::vector<Tile>();
+
+	for (int j = std::max(prob_t_index.y - error, 0); j < std::min(prob_t_index.y + error, (int)tiles.size()); j++) {
+		for (int i = std::max( prob_t_index.x - error, 0 ); i < std::min(prob_t_index.x + error, (int)tiles[0].size()); i++) {
+			if (tiles[j][i].collidable && sf::FloatRect(tiles[j][i].getPosition(), sf::Vector2f({(float)tilewidth, (float)tileheight})).findIntersection(player_bounds)) {
+				col_tiles->push_back(tiles[j][i]);
+			}
+		}
+	}
+
+	return col_tiles;
 }

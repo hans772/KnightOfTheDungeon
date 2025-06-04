@@ -1,7 +1,7 @@
 #include "animation.hpp"
 #include "globals.hpp"
 #include <iostream>
-Animation::Animation(int fw, int fh, int anim_speed) : frame_width(fw), frame_height(fh), frame(0) {}
+Animation::Animation(int fw, int fh) : frame_width(fw), frame_height(fh), frame(0) {}
 
 void Animation::add_state(std::string state, int row, int frames, int speed) {
 	anim_states[state]["row"] = row;
