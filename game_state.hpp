@@ -7,15 +7,56 @@
 #include "globals.hpp"
 #include "event_handler.hpp"
 #include <stack>
+#include <unordered_set>
 class GameState {
 public:
-	KeyEventHandler key_event_handler;
+	EventHandler event_handler;
 	sf::View game_view;
 
 public:
 	virtual ~GameState() =  default;
-	virtual void update(sf::Time dt) = 0;
+	virtual void update(sf::Time dt, const sf::WindowBase &relative_to_window) = 0;
 	virtual void render(sf::RenderWindow& window) = 0;
+};
+
+class MainGame : public GameState {
+	MapGenerator mapgen;
+	TileMap tilemap;
+	Player player;
+
+	sf::RenderTexture darkness;
+
+	float camera_shake_offset;
+
+	sf::Vector2f view_pos;
+	sf::Vector2f view_vel;
+	sf::Vector2f view_acc;
+
+	std::pair<std::vector<sf::Vector2f>, std::unordered_set<Tile*>> cast_rays();
+
+public:
+	MainGame(int map_w, int map_h);
+	virtual void update(sf::Time dt, const sf::WindowBase &relative_to_window) override;
+	virtual void render(sf::RenderWindow &window) override;
+};
+
+class GameOver : public GameState {
+	sf::Texture game_over_image;
+	sf::RectangleShape rect_shape;
+	
+	float progress;
+
+public:
+	GameOver(int winw, int winh);
+	virtual void update(sf::Time dt, const sf::WindowBase &relative_to_window) override;
+	virtual void render(sf::RenderWindow& window) override;
+};
+
+enum class StateActionType { Push, Pop, Change };
+
+struct StateAction {
+	StateActionType type;
+	std::unique_ptr<GameState> new_state = nullptr;
 };
 
 class GameStateManager {
@@ -24,6 +65,9 @@ public:
 
 	void push_state(std::unique_ptr<GameState> game_state);
 	void pop_state();
+	void change_state(std::unique_ptr<GameState> game_state);
+
+	void apply_queued_actions();
 
 	GameState* current_state();
 private:
@@ -33,16 +77,5 @@ private:
 	GameStateManager& operator=(const GameStateManager&) = delete;
 
 	std::stack<std::unique_ptr<GameState>> states;
-};
-
-class MainGame : public GameState {
-	MapGenerator mapgen;
-	TileMap tilemap;
-	Player player;
-
-
-public:
-	MainGame(int map_w, int map_h);
-	virtual void update(sf::Time dt) override;
-	virtual void render(sf::RenderWindow &window) override;
+	std::vector<StateAction> queued_actions;
 };

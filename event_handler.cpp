@@ -1,22 +1,50 @@
 #include "event_handler.hpp"
+#include <iostream>
 
-void KeyEventHandler::register_event(sf::Keyboard::Scan key, Callback callback, bool repeat) {
-	callbacks[key].push_back({ callback, repeat });
+void EventHandler::register_key_event(sf::Keyboard::Scan key, KeyCallback callback, bool repeat) {
+	key_events[key].push_back({ callback, repeat });
 }
-void KeyEventHandler::handle_single_events(const sf::Event::KeyPressed* keypress) {
-	const auto &iterator = callbacks.find(keypress->scancode);
-	if (iterator != callbacks.end()) {
-		for (auto& pair : (iterator->second)) {
-			if (!pair.second) (pair.first)(keypress->scancode);
+
+void EventHandler::schedule_event(SchedCallback callback, float interval, int repeats, bool indefinite) {
+	scheduled_events.push_back({ callback, repeats, indefinite, interval + elapsed_time });
+}
+
+void EventHandler::handle_single_k_events(const sf::Event::KeyPressed* keypress) {
+	const auto &iterator = key_events.find(keypress->scancode);
+	if (iterator != key_events.end()) {
+		for (auto& event : (iterator->second)) {
+			if (!event.repeat) (event.callback)(keypress->scancode);
 		}
 	}
 }
-void KeyEventHandler::handle_repeat_events() {
-	for (auto& keyval : callbacks) {
+void EventHandler::handle_repeat_k_events() {
+	for (auto& keyval : key_events) {
 		if (sf::Keyboard::isKeyPressed(keyval.first)) {
-			for (auto& pair : keyval.second) {
-				if (pair.second) (pair.first)(keyval.first);
+			for (KeyEvent& event : keyval.second) {
+				if (event.repeat) (event.callback)(keyval.first);
 			}
 		}
+	}
+}
+
+void EventHandler::run_scheduled_events(sf::Time dt) {
+	elapsed_time += dt.asSeconds();
+	std::vector<int> removes;
+	for (int i = 0; i < scheduled_events.size(); i++) {
+		ScheduledEvent event = scheduled_events[i];
+		if (event.seconds_interval < elapsed_time) {
+			event.callback();
+			if (event.repeats || event.indefinite) {
+				event.seconds_interval += event.seconds_interval;
+				event.repeats--;
+			}
+			else {
+				removes.push_back(i);
+			}
+		}
+	}
+
+	for (auto r = removes.rbegin(); r != removes.rend(); r++) {
+		scheduled_events.erase(scheduled_events.begin() + (*r));
 	}
 }

@@ -17,7 +17,9 @@ int main()
     sf::Clock clock;
     sf::Time dt;
 
+    GameStateManager::get().push_state(std::make_unique<GameOver>(800, 800));
     GameStateManager::get().push_state(std::make_unique<MainGame>(5, 5));
+    GameStateManager::get().apply_queued_actions();
 
     while (window.isOpen())
     {
@@ -34,18 +36,21 @@ int main()
                 window.close();
             else if (const auto* key_pressed = event->getIf<sf::Event::KeyPressed>())
             {
-                current_state->key_event_handler.handle_single_events(key_pressed);
+                current_state->event_handler.handle_single_k_events(key_pressed);
             }
         }
 
-        current_state->key_event_handler.handle_repeat_events();
-        
-        current_state->update(dt);
+        current_state->event_handler.handle_repeat_k_events();
+        current_state->event_handler.run_scheduled_events(dt);
+
+        current_state->update(dt, window);
 
         window.clear();
 
         current_state->render(window);
 
         window.display();
+
+        GameStateManager::get().apply_queued_actions();
     }
 }

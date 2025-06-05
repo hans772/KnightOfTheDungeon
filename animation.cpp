@@ -25,3 +25,6 @@ void Animation::next_frame(sf::Time dt) {
 	frame+=dt.asSeconds()*cur_anim_speed;
 	if(frame >= current_max_frames) frame-=current_max_frames * (int)(frame/current_max_frames);
 }
+void Animation::set_frame(int f) {
+	frame = f;
+}
