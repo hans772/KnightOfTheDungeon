@@ -1,11 +1,14 @@
 #include "globals.hpp"
 
-TileType charToTileType(char c) {
+TileType char_to_tile_type(char c) {
 	switch (c) {
 	case ' ': return TileType::FLOOR;
 	case '#': return TileType::WALL;
 	case '*': return TileType::TRAP_SPIKE;
 	case '$': return TileType::TRAP_ARROW;
+	case 'R': return TileType::REWARD;
+	case 'P': return TileType::POTION;
+	case 'E': return TileType::EYE;
 	default: throw "Invalid tile character";
 	}
 }

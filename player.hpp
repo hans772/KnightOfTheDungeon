@@ -14,6 +14,7 @@ public:
 	sf::Vector2f facing;
 	float move_speed;
 	float drag;
+	sf::Angle fov;
 	int height;
 	int width;
 	int lives_remaining;
@@ -33,6 +34,7 @@ public:
 	void hurt();
 	void stop_invulnerability();
 	void die();
+	void win();
 
 	sf::Vector2f get_center();
 

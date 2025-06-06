@@ -6,6 +6,7 @@ Player::Player(std::string path, int fw, int fh) : sprite(texture), animation(fw
 	width = fw;
 	drag = 5;
 	facing = sf::Vector2f({ 0.f, 1.f });
+	fov = sf::degrees(120);
 	if(!texture.loadFromFile(path)) throw "could not load player";
 
 	invulnerable = false;
@@ -13,7 +14,8 @@ Player::Player(std::string path, int fw, int fh) : sprite(texture), animation(fw
 	animation.add_state("idle", 0, 4, 4);
 	animation.add_state("walk_right", 1, 8, 8);
 	animation.add_state("walk_left", 3, 8, 8);
-	animation.add_state("die", 12, 8, 3.5);
+	animation.add_state("win", 12, 8, 3.75);
+	animation.add_state("die", 15, 8, 3.75);
 
 	lives_remaining = 3;
 
@@ -97,5 +99,10 @@ void Player::stop_invulnerability() {
 
 void Player::die() {
 	animation.set_state("die");
+	animation.set_frame(0);
+}
+
+void Player::win() {
+	animation.set_state("win");
 	animation.set_frame(0);
 }

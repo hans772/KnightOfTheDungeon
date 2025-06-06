@@ -32,6 +32,9 @@ class MainGame : public GameState {
 	sf::Vector2f view_vel;
 	sf::Vector2f view_acc;
 
+	bool game_won;
+
+	void set_player_damage_color();
 	std::pair<std::vector<sf::Vector2f>, std::unordered_set<Tile*>> cast_rays();
 
 public:
@@ -47,7 +50,7 @@ class GameOver : public GameState {
 	float progress;
 
 public:
-	GameOver(int winw, int winh);
+	GameOver(int winw, int winh, std::string);
 	virtual void update(sf::Time dt, const sf::WindowBase &relative_to_window) override;
 	virtual void render(sf::RenderWindow& window) override;
 };

@@ -6,7 +6,7 @@ void EventHandler::register_key_event(sf::Keyboard::Scan key, KeyCallback callba
 }
 
 void EventHandler::schedule_event(SchedCallback callback, float interval, int repeats, bool indefinite) {
-	scheduled_events.push_back({ callback, repeats, indefinite, interval + elapsed_time });
+	scheduled_events.push_back({ callback, repeats, indefinite, interval + elapsed_time, interval });
 }
 
 void EventHandler::handle_single_k_events(const sf::Event::KeyPressed* keypress) {
@@ -31,12 +31,12 @@ void EventHandler::run_scheduled_events(sf::Time dt) {
 	elapsed_time += dt.asSeconds();
 	std::vector<int> removes;
 	for (int i = 0; i < scheduled_events.size(); i++) {
-		ScheduledEvent event = scheduled_events[i];
-		if (event.seconds_interval < elapsed_time) {
-			event.callback();
-			if (event.repeats || event.indefinite) {
-				event.seconds_interval += event.seconds_interval;
-				event.repeats--;
+		ScheduledEvent *event = &scheduled_events[i];
+		if (event->next_execute < elapsed_time) {
+			event->callback();
+			if (event->repeats || event->indefinite) {
+				event->next_execute = elapsed_time+event->seconds_interval;
+				event->repeats--;
 			}
 			else {
 				removes.push_back(i);

@@ -76,6 +76,11 @@ void TileMap::load_tile_textures() {
 	Tile::add_state(TileType::TRAP_SPIKE, TileState::DEFAULT, 2, 0, 1);
 	Tile::add_state(TileType::TRAP_SPIKE, TileState::SPIKE_ACTIVATED, 2, 1, 1);
 	Tile::add_state(TileType::TRAP_ARROW, TileState::DEFAULT, 3, 0, 1);
+	Tile::add_state(TileType::REWARD, TileState::DEFAULT, 1, 4, 1);
+	Tile::add_state(TileType::POTION, TileState::DEFAULT, 1, 5, 1);
+	Tile::add_state(TileType::EYE, TileState::DEFAULT, 1, 6, 1);
+	Tile::add_state(TileType::POTION, TileState::POTION_USED, 1, 1, 1);
+	Tile::add_state(TileType::EYE, TileState::EYE_USED, 1, 1, 1);
 }
 
 TileMap::TileMap(int tilewidth, int tileheight) : tileheight(tileheight), tilewidth(tilewidth) {}
@@ -103,6 +108,9 @@ void TileMap::generate_tilemap(std::vector<std::vector<TileType>>& map){
 			case TileType::TRAP_ARROW:
 				newtile.opaque = true;
 			case TileType::TRAP_SPIKE:
+			case TileType::REWARD:
+			case TileType::POTION:
+			case TileType::EYE:
 				newtile.collidable = true;
 			}
 			tiles.back().push_back(newtile);

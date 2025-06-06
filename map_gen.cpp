@@ -30,7 +30,7 @@ void MapGenerator::load_presets() {
 			std::transform(
 				row.begin(), row.end(),
 				std::back_inserter(presets[preset["name"]].back()),
-				charToTileType
+				char_to_tile_type
 			);
 		}
 	}
@@ -93,12 +93,14 @@ void MapGenerator::generate_map(){
 	int** preset_grid = new int* [grid_height];
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	std::uniform_int_distribution<> dist(0, 7);
+	std::uniform_int_distribution<> dist(2, preset_keys.size()-1);
 
 	for (int gr = 0; gr < grid_height; gr++) {
 		preset_grid[gr] = new int[grid_width];
 		for (int gc = 0; gc < grid_width; gc++) {
-			preset_grid[gr][gc] = dist(gen);
+			if (!gr && !gc) preset_grid[gr][gc] = (std::find(preset_keys.begin(), preset_keys.end(), "Start")) - preset_keys.begin();
+			else if (gr == grid_width - 1 && gc == grid_height - 1) preset_grid[gr][gc] = (std::find(preset_keys.begin(), preset_keys.end(), "End")) - preset_keys.begin();
+			else preset_grid[gr][gc] = dist(gen);
 		}
 	}
 

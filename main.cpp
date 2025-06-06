@@ -17,8 +17,9 @@ int main()
     sf::Clock clock;
     sf::Time dt;
 
-    GameStateManager::get().push_state(std::make_unique<GameOver>(800, 800));
-    GameStateManager::get().push_state(std::make_unique<MainGame>(5, 5));
+    GameStateManager::get().push_state(std::make_unique<GameOver>(800, 800, "win.png"));
+    GameStateManager::get().push_state(std::make_unique<GameOver>(800, 800, "game_over.png"));
+    GameStateManager::get().push_state(std::make_unique<MainGame>(3,3));
     GameStateManager::get().apply_queued_actions();
 
     while (window.isOpen())

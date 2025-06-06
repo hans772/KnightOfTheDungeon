@@ -57,6 +57,8 @@ MainGame::MainGame(int map_w, int map_h) :
 		(sf::Vector2f((mapgen.ROOM_WIDTH) * tilemap.tilewidth, (mapgen.ROOM_HEIGHT) * tilemap.tileheight))/2.f);
 	view_pos = player.get_center();
 
+	game_won = false;
+
 	event_handler.register_key_event(sf::Keyboard::Scan::Up, std::bind(&Player::move, &player, std::placeholders::_1), true);
 	event_handler.register_key_event(sf::Keyboard::Scan::Down, std::bind(&Player::move, &player, std::placeholders::_1), true);
 	event_handler.register_key_event(sf::Keyboard::Scan::Left, std::bind(&Player::move, &player, std::placeholders::_1), true);
@@ -68,9 +70,18 @@ MainGame::MainGame(int map_w, int map_h) :
 	darkness.clear(sf::Color::Transparent);
 }
 
+GameOver::GameOver(int winw, int winh, std::string name) {
+	if (!game_over_image.loadFromFile("resources\\assets\\" + name)) throw "Could not load Game Over Screen";
+	rect_shape.setSize(sf::Vector2f({ (float)winw, (float)winh }));
+	rect_shape.setTexture(&game_over_image);
+	rect_shape.setFillColor(sf::Color::Black);
+	game_view.setCenter(sf::Vector2f({ (float)winw, (float)winh }) / 2.f);
+	progress = 0;
+}
+
 std::pair<std::vector<sf::Vector2f>, std::unordered_set<Tile*>> MainGame::cast_rays() {
-	sf::Angle fov_start = sf::degrees(-180);
-	sf::Angle fov_end = sf::degrees(180);
+	sf::Angle fov_start = player.fov * -0.5f;
+	sf::Angle fov_end = player.fov * 0.5f;
 	sf::Angle step = sf::degrees(1);
 
 	sf::Vector2f origin = player.get_center();
@@ -107,14 +118,18 @@ std::pair<std::vector<sf::Vector2f>, std::unordered_set<Tile*>> MainGame::cast_r
 	return { vecs , touches };
 }
 
-
+void MainGame::set_player_damage_color() {
+	player.sprite.setColor(sf::Color::Red);
+	sf::Sprite* player_sprite = &player.sprite;
+	event_handler.schedule_event([player_sprite]() {player_sprite->setColor(sf::Color::White); }, 0.2f, 0);
+}
 
 
 void MainGame::update(sf::Time dt, const sf::WindowBase& relative_to_window) {
 	sf::FloatRect expected_box = player.collision_box;
 	std::vector<Tile*> collisions;
 
-	if (!player.lives_remaining) {
+	if (!player.lives_remaining || game_won) {
 		player.update(dt);
 		return;
 	}
@@ -166,6 +181,7 @@ void MainGame::update(sf::Time dt, const sf::WindowBase& relative_to_window) {
 		case TileType::TRAP_SPIKE:
 			if (!player.invulnerable) {
 				player.hurt();
+				event_handler.schedule_event(std::bind(&MainGame::set_player_damage_color, this), 0.4f, 5);
 				event_handler.schedule_event(std::bind(&Player::stop_invulnerability, &player), 2, 0);
 				camera_shake_offset += 2;
 
@@ -180,6 +196,27 @@ void MainGame::update(sf::Time dt, const sf::WindowBase& relative_to_window) {
 			event_handler.schedule_event(
 				[tile]() {tile->set_state(TileState::DEFAULT); }, 2, 0
 			);
+			break;
+		case TileType::REWARD: {
+			game_won = true;
+			player.win();
+			sf::Vector2u win_size = relative_to_window.getSize();;
+
+			event_handler.schedule_event([win_size]() {
+				GameStateManager::get().pop_state();
+				GameStateManager::get().pop_state();
+				}, 2, 0);
+			break;
+		}
+		case TileType::POTION:
+			player.move_speed *= 2;
+			tile->collidable = false;
+			tile->set_state(TileState::POTION_USED);
+			break;
+		case TileType::EYE:
+			player.fov = sf::degrees(360);
+			tile->collidable = false;
+			tile->set_state(TileState::EYE_USED);
 			break;
 		}
 	}
@@ -239,15 +276,6 @@ void MainGame::render(sf::RenderWindow& window){
 
 	window.draw(mask_sprite, sf::BlendMultiply);
 
-}
-
-GameOver::GameOver(int winw, int winh) {
-	if (!game_over_image.loadFromFile("resources\\assets\\game_over.png")) throw "Could not load Game Over Screen";
-	rect_shape.setSize(sf::Vector2f({ (float)winw, (float)winh }));
-	rect_shape.setTexture(&game_over_image);
-	rect_shape.setFillColor(sf::Color::Black);
-	game_view.setCenter(sf::Vector2f({ (float)winw, (float)winh }) / 2.f);
-	progress = 0;
 }
 
 void GameOver::update(sf::Time dt, const sf::WindowBase &relative_to_window) {

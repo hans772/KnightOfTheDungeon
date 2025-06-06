@@ -8,7 +8,9 @@
 enum class TileState {
 	DEFAULT,
 	WALL_FOOT,
-	SPIKE_ACTIVATED
+	SPIKE_ACTIVATED,
+	POTION_USED,
+	EYE_USED
 };
 
 class Tile : public sf::Drawable, public sf::Transformable{
