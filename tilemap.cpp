@@ -33,6 +33,7 @@ void Tile::set_state(TileState nstate, int index) {
 	}
 }
 
+// get 4 vertices of the tile in world coords
 std::vector<sf::Vector2f> Tile::get_vertices(sf::Vector2f pl_pos) {
 	std::vector<sf::Vector2f> vertices;
 	sf::Vector2f pos = getPosition();
@@ -81,6 +82,8 @@ void TileMap::load_tile_textures() {
 	Tile::add_state(TileType::EYE, TileState::DEFAULT, 1, 6, 1);
 	Tile::add_state(TileType::POTION, TileState::POTION_USED, 1, 1, 1);
 	Tile::add_state(TileType::EYE, TileState::EYE_USED, 1, 1, 1);
+
+	// addd state type, state, row in atlas, column in atlas, number of variants/states
 }
 
 TileMap::TileMap(int tilewidth, int tileheight) : tileheight(tileheight), tilewidth(tilewidth) {}
@@ -99,7 +102,7 @@ void TileMap::generate_tilemap(std::vector<std::vector<TileType>>& map){
 				if (i < map[0].size() - 1 && map[j][i + 1] == TileType::WALL) bitmask |= 2;
 				if (j < map.size() - 1 && map[j + 1][i] == TileType::WALL) bitmask |= 4;  
 				if (i > 0 && map[j][i - 1] == TileType::WALL) bitmask |= 8; 
-
+				// bitmasking to create matchign textures for walls
 			}
 			}
 			Tile newtile = Tile(type, state, sf::Vector2f(i * tilewidth, j * tileheight), bitmask);
@@ -131,6 +134,7 @@ std::vector<Tile*> TileMap::check_collision(const sf::FloatRect &player_bounds) 
 	sf::Vector2i prob_t_index = { (int)player_pos.x / tilewidth, (int)player_pos.y / tileheight };
 
 	int error = 2;
+	// check collision with collidable tiles in the tile map using player bounds
 
 	std::vector<Tile*> col_tiles;
 
@@ -145,6 +149,7 @@ std::vector<Tile*> TileMap::check_collision(const sf::FloatRect &player_bounds) 
 	return col_tiles;
 }
 
+// get the tile at the current world position
 Tile* TileMap::get_tile_at_pos(sf::Vector2f pos) {
 	if (pos.x < 0 || pos.x > tilewidth * tiles[0].size()) return nullptr;
 	if (pos.y < 0 || pos.y > tileheight * tiles.size()) return nullptr;

@@ -35,6 +35,7 @@ public:
 	void stop_invulnerability();
 	void die();
 	void win();
+	bool check_collision(sf::Vector2f);
 
 	sf::Vector2f get_center();
 

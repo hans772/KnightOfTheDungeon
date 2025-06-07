@@ -1,6 +1,10 @@
 #include "event_handler.hpp"
 #include <iostream>
 
+// due to the way SFML is setup, it is easier to use dedicated functions to handle specific types of functions
+// rather to template is
+// due to this being a small scale project, i chose to do this instead of templating
+
 void EventHandler::register_key_event(sf::Keyboard::Scan key, KeyCallback callback, bool repeat) {
 	key_events[key].push_back({ callback, repeat });
 }
@@ -8,7 +12,7 @@ void EventHandler::register_key_event(sf::Keyboard::Scan key, KeyCallback callba
 void EventHandler::schedule_event(SchedCallback callback, float interval, int repeats, bool indefinite) {
 	scheduled_events.push_back({ callback, repeats, indefinite, interval + elapsed_time, interval });
 }
-
+//k_events => key events
 void EventHandler::handle_single_k_events(const sf::Event::KeyPressed* keypress) {
 	const auto &iterator = key_events.find(keypress->scancode);
 	if (iterator != key_events.end()) {

@@ -8,6 +8,8 @@
 #include "event_handler.hpp"
 #include <stack>
 #include <unordered_set>
+#include "entity.hpp"
+
 class GameState {
 public:
 	EventHandler event_handler;
@@ -28,6 +30,8 @@ class MainGame : public GameState {
 
 	float camera_shake_offset;
 
+	std::vector<Arrow> arrows;
+
 	sf::Vector2f view_pos;
 	sf::Vector2f view_vel;
 	sf::Vector2f view_acc;
@@ -35,6 +39,7 @@ class MainGame : public GameState {
 	bool game_won;
 
 	void set_player_damage_color();
+	void summon_arrows_at_tile(Tile *);
 	std::pair<std::vector<sf::Vector2f>, std::unordered_set<Tile*>> cast_rays();
 
 public:

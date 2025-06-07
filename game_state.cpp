@@ -9,6 +9,9 @@ GameStateManager& GameStateManager::get() {
 	return instance;
 }
 
+// the gamestate manager adds each action to queue, and after each game loop, all queued actions will be executed
+// else there is a possibility that the referenced game state gets deleted throwing an error
+
 void GameStateManager::push_state(std::unique_ptr<GameState> state) {
 	queued_actions.push_back({ StateActionType::Push, std::move(state) });
 }
@@ -45,7 +48,7 @@ GameState* GameStateManager::current_state() {
 	return states.empty() ? nullptr : states.top().get();
 }
 
-MainGame::MainGame(int map_w, int map_h) : 
+MainGame::MainGame(int map_w, int map_h): 
 	mapgen(map_w, map_h),
 	tilemap(16, 16),
 	darkness({200, 200}),
@@ -53,11 +56,27 @@ MainGame::MainGame(int map_w, int map_h) :
 {
 	mapgen.generate_map();
 	tilemap.generate_tilemap(mapgen.map);
+
+	// sets player pos and camera to the center of the start room
+
 	player.set_center(
 		(sf::Vector2f((mapgen.ROOM_WIDTH) * tilemap.tilewidth, (mapgen.ROOM_HEIGHT) * tilemap.tileheight))/2.f);
 	view_pos = player.get_center();
 
+	Arrow::load_arrow_textures();
+
+	// scheduling spawn arrow events for each arrow trap tile
+	for (int j = 0; j < mapgen.map_height; j ++ ) {
+		for (int i = 0; i < mapgen.map_width; i++) {
+			if (tilemap.tiles[j][i].type == TileType::TRAP_ARROW) {
+				event_handler.schedule_event([j, i, this]() {this->summon_arrows_at_tile(&this->tilemap.tiles[j][i]); }, 2, 0, true);
+			}
+		}
+	}
+
 	game_won = false;
+
+	//player movement
 
 	event_handler.register_key_event(sf::Keyboard::Scan::Up, std::bind(&Player::move, &player, std::placeholders::_1), true);
 	event_handler.register_key_event(sf::Keyboard::Scan::Down, std::bind(&Player::move, &player, std::placeholders::_1), true);
@@ -70,6 +89,8 @@ MainGame::MainGame(int map_w, int map_h) :
 	darkness.clear(sf::Color::Transparent);
 }
 
+// gameover could be win or lose
+
 GameOver::GameOver(int winw, int winh, std::string name) {
 	if (!game_over_image.loadFromFile("resources\\assets\\" + name)) throw "Could not load Game Over Screen";
 	rect_shape.setSize(sf::Vector2f({ (float)winw, (float)winh }));
@@ -78,6 +99,18 @@ GameOver::GameOver(int winw, int winh, std::string name) {
 	game_view.setCenter(sf::Vector2f({ (float)winw, (float)winh }) / 2.f);
 	progress = 0;
 }
+
+// all 4 sides of tile
+void MainGame::summon_arrows_at_tile(Tile * tile) {
+	arrows.push_back(Arrow(tile->getPosition() + tile->get_bounds().size / 2.f + sf::Vector2f(0, tilemap.tileheight), sf::degrees(90)));
+	arrows.push_back(Arrow(tile->getPosition() + tile->get_bounds().size / 2.f + sf::Vector2f(0, -tilemap.tileheight), sf::degrees(-90)));
+	arrows.push_back(Arrow(tile->getPosition() + tile->get_bounds().size / 2.f + sf::Vector2f(tilemap.tilewidth, 0), sf::degrees(0)));
+	arrows.push_back(Arrow(tile->getPosition() + tile->get_bounds().size / 2.f + sf::Vector2f(-tilemap.tilewidth, 0) , sf::degrees(-180)));
+}
+
+// casts a ray every 1 degree for the whole fov of the player
+// on hitting an opaque block it stops casting and adds the end pos and the opaque block to a vector
+// vector is returned in the end
 
 std::pair<std::vector<sf::Vector2f>, std::unordered_set<Tile*>> MainGame::cast_rays() {
 	sf::Angle fov_start = player.fov * -0.5f;
@@ -221,6 +254,36 @@ void MainGame::update(sf::Time dt, const sf::WindowBase& relative_to_window) {
 		}
 	}
 
+	// checking arrow collisions
+
+	auto it = arrows.begin();
+	while (it != arrows.end()) {
+		it->update(dt);
+		sf::Vector2f pos = it->get_tip_position();
+		if (tilemap.get_tile_at_pos(pos)->opaque) {
+			it = arrows.erase(it);
+		}
+		else if (player.check_collision(pos)) {
+			if (!player.invulnerable) {
+				player.hurt();
+				event_handler.schedule_event(std::bind(&MainGame::set_player_damage_color, this), 0.4f, 5);
+				event_handler.schedule_event(std::bind(&Player::stop_invulnerability, &player), 2, 0);
+				camera_shake_offset += 2;
+
+				if (!player.lives_remaining) {
+					player.die();
+					event_handler.schedule_event([]() {
+						GameStateManager::get().pop_state();
+						}, 2, 0);
+				}
+
+				it = arrows.erase(it);
+
+			}
+		}
+		else it++;
+	}
+
 	player.update(dt);
 
 	view_vel = (player.get_center() - view_pos) * 1.5f;
@@ -242,7 +305,12 @@ void MainGame::render(sf::RenderWindow& window){
 	window.draw(tilemap);
 	window.draw(player.sprite);
 
+	for (Arrow arrow : arrows) {
+		window.draw(arrow);
+	}
+
 	darkness.clear(sf::Color::Black);
+	// creating a small radius around the player so that the sprite is visible
 
 	sf::CircleShape circle;
 	circle.setPosition(player.position - (view_pos - game_view.getSize() / 2.f));
@@ -250,6 +318,8 @@ void MainGame::render(sf::RenderWindow& window){
 	circle.setFillColor(sf::Color::White);
 	circle.setRadius(16.f);
 
+
+	// creating atriangle fan out of all the ray endpoints
 	sf::VertexArray cone(sf::PrimitiveType::TriangleFan);
 	cone.append({ player.get_center() - (view_pos - game_view.getSize() / 2.f), sf::Color::White });
 
@@ -267,9 +337,16 @@ void MainGame::render(sf::RenderWindow& window){
 		darkness.draw(rect);
 
 	}
+	// every collided tile is also fully visible to identify walls and arrow traps
+
 	darkness.draw(cone);
 	darkness.draw(circle);
 	sf::Sprite mask_sprite = sf::Sprite(darkness.getTexture());
+	
+	// createsa black and whit emask of visible area to the player
+	// this is then multiplied on top of the actual screen to create a darkness effect
+	// hence if i chose to make entities they can be draewn on the actual screen and then the darkness on top to hide them in the dark
+
 	mask_sprite.setScale({ 1.f, -1.f });
 	mask_sprite.setOrigin({ 0.f, mask_sprite.getLocalBounds().size.y});
 	mask_sprite.setPosition((view_pos - game_view.getSize() / 2.f));
@@ -278,6 +355,7 @@ void MainGame::render(sf::RenderWindow& window){
 
 }
 
+// increasing the brightness of the game over screen as time passes
 void GameOver::update(sf::Time dt, const sf::WindowBase &relative_to_window) {
 	if (progress < 1) {
 		progress += 0.2f * dt.asSeconds();

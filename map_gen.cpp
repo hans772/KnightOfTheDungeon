@@ -40,6 +40,8 @@ bool MapGenerator::in_bounds(std::pair<int, int> loc) {
 	return ((loc.first >= 0) && (loc.first < grid_width)) && ((loc.second >= 0) && (loc.second < grid_height));
 }
 
+// middle bw 2 room centers is the wall
+
 void MapGenerator::remove_barrier(std::pair<int, int> from, std::pair<int, int> to) {
 	int room1_x = from.first * (ROOM_WIDTH - 1) + ROOM_WIDTH / 2;
 	int room1_y = from.second * (ROOM_HEIGHT - 1) + ROOM_HEIGHT / 2;
@@ -133,15 +135,5 @@ void MapGenerator::generate_map(){
 	}
 
 	open_room(grid, 0, 0, &stack);
-
-	for (int y = 0; y < map_height; y++) {
-		for (int x = 0; x < map_width; x++) {
-
-			std::cout << (char)(map[y][x]);
-		
-		}
-
-		std::cout << '\n';
-	}
 }
 

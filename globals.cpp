@@ -13,6 +13,7 @@ TileType char_to_tile_type(char c) {
 	}
 }
 
+//lerps color a to color b
 sf::Color lerp_color(const sf::Color& a, const sf::Color& b, float t){
     auto lerp = [](uint8_t start, uint8_t end, float t) -> uint8_t  {
         return static_cast<uint8_t>(start + t * (end - start));

@@ -14,8 +14,10 @@ Player::Player(std::string path, int fw, int fh) : sprite(texture), animation(fw
 	animation.add_state("idle", 0, 4, 4);
 	animation.add_state("walk_right", 1, 8, 8);
 	animation.add_state("walk_left", 3, 8, 8);
-	animation.add_state("win", 12, 8, 3.75);
-	animation.add_state("die", 15, 8, 3.75);
+	animation.add_state("win", 12, 8, 3.9);
+	animation.add_state("die", 15, 8, 3.9);
+
+	// add state name, row, number of frames, frame per sec
 
 	lives_remaining = 3;
 
@@ -82,6 +84,11 @@ void Player::move(sf::Keyboard::Scan key) {
 	}
 
 	velocity = velocity.normalized();
+}
+
+bool Player::check_collision(sf::Vector2f pos) {
+	return ((collision_box.position.x < pos.x) && (pos.x < collision_box.position.x + collision_box.size.x) &&
+		(collision_box.position.y < pos.y) && (pos.y < collision_box.position.y + collision_box.size.y));
 }
 
 void Player::rotate(sf::Angle angle) {
