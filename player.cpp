@@ -2,6 +2,7 @@
 
 Player::Player(std::string path, int fw, int fh) : sprite(texture), animation(fw, fh){
 	move_speed = 48;
+	max_speed = 100;
 	height = fh;
 	width = fw;
 	drag = 5;

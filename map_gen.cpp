@@ -22,7 +22,6 @@ void MapGenerator::load_presets() {
 	presets_f >> presets_json; 
 
 	for (const auto &preset : presets_json["rooms"]) {
-		std::cout << "Loaded Preset : " << preset["name"] << '\n';
 		preset_keys.push_back(preset["name"]);
 		for (const std::string& row : preset["layout"]) {
 			presets[preset["name"]].push_back(std::vector<TileType>());
@@ -55,6 +54,8 @@ void MapGenerator::remove_barrier(std::pair<int, int> from, std::pair<int, int> 
 
 	map[wall_y][wall_x] = TileType::FLOOR;
 }
+
+// a recursive way to implement the DFS algorithm, this will make sure every room is accessible in some way or the other
 
  void MapGenerator::open_room(bool** grid, int i, int j, std::vector<std::pair<int, int>>* stack) {
 	grid[j][i] = true;
@@ -101,7 +102,7 @@ void MapGenerator::generate_map(){
 		preset_grid[gr] = new int[grid_width];
 		for (int gc = 0; gc < grid_width; gc++) {
 			if (!gr && !gc) preset_grid[gr][gc] = (std::find(preset_keys.begin(), preset_keys.end(), "Start")) - preset_keys.begin();
-			else if (gr == grid_width - 1 && gc == grid_height - 1) preset_grid[gr][gc] = (std::find(preset_keys.begin(), preset_keys.end(), "End")) - preset_keys.begin();
+			else if (gr == grid_height - 1 && gc == grid_width - 1) preset_grid[gr][gc] = (std::find(preset_keys.begin(), preset_keys.end(), "End")) - preset_keys.begin();
 			else preset_grid[gr][gc] = dist(gen);
 		}
 	}
@@ -135,5 +136,12 @@ void MapGenerator::generate_map(){
 	}
 
 	open_room(grid, 0, 0, &stack);
+
+	for (int j = 0; j < map_height; j++) {
+		for (int i = 0; i < map_width; i++) {
+			std::cout << (char)map[j][i];
+		}
+		std::cout << '\n';
+	}
 }
 

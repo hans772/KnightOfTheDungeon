@@ -56,6 +56,7 @@ class GameOver : public GameState {
 
 public:
 	GameOver(int winw, int winh, std::string);
+	void start_new_game();
 	virtual void update(sf::Time dt, const sf::WindowBase &relative_to_window) override;
 	virtual void render(sf::RenderWindow& window) override;
 };

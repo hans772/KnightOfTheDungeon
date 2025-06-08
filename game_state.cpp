@@ -243,6 +243,7 @@ void MainGame::update(sf::Time dt, const sf::WindowBase& relative_to_window) {
 		}
 		case TileType::POTION:
 			player.move_speed *= 2;
+			if (player.move_speed > player.max_speed) player.move_speed = player.max_speed;
 			tile->collidable = false;
 			tile->set_state(TileState::POTION_USED);
 			break;
@@ -355,11 +356,32 @@ void MainGame::render(sf::RenderWindow& window){
 
 }
 
+void GameOver::start_new_game() {
+	progress = 0;
+
+	std::random_device rd;
+	std::mt19937 gen(rd());
+
+	std::uniform_int_distribution<> dist(3, 5);
+
+	GameStateManager::get().push_state(std::make_unique<MainGame>(dist(gen), dist(gen)));
+}
+
 // increasing the brightness of the game over screen as time passes
 void GameOver::update(sf::Time dt, const sf::WindowBase &relative_to_window) {
 	if (progress < 1) {
 		progress += 0.2f * dt.asSeconds();
 		rect_shape.setFillColor(lerp_color(sf::Color::Black, sf::Color::White, progress));
+	}
+	else {
+		progress = 0;
+
+		std::random_device rd;
+		std::mt19937 gen(rd());
+
+		std::uniform_int_distribution<> dist(3, 5);
+
+		GameStateManager::get().push_state(std::make_unique<MainGame>(dist(gen), dist(gen)));
 	}
 }
 

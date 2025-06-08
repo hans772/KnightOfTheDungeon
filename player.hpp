@@ -13,6 +13,7 @@ public:
 	sf::Vector2f position;
 	sf::Vector2f facing;
 	float move_speed;
+	float max_speed;
 	float drag;
 	sf::Angle fov;
 	int height;
